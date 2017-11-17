@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -44,6 +45,11 @@ public class UserController {
         System.out.println(user);
         user.setId("1");
         return user;
+    }
+
+    @DeleteMapping("{id}")
+    public void delete(@PathVariable String id){
+        System.out.println(String.format("Will delete user id=%s", id));
     }
 
     @GetMapping
