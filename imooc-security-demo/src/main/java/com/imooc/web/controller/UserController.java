@@ -3,6 +3,7 @@ package com.imooc.web.controller;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.imooc.dto.User;
 import com.imooc.dto.UserQueryCondition;
+import com.imooc.exception.UserNotExistException;
 import com.sun.org.apache.xpath.internal.SourceTree;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -67,6 +68,9 @@ public class UserController {
     @GetMapping("/{id}")
     @JsonView(User.UserDetailView.class)
     public User getInfo(@PathVariable String id) {
+        if (true){
+            throw new UserNotExistException(id);
+        }
         User user = new User();
         user.setUsername("tom");
         return user;
