@@ -1,13 +1,17 @@
 package com.imooc.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class UserQueryCondition {
 
+    @ApiModelProperty("用户名")
     private String username;
 
+    @ApiModelProperty("年龄")
     private int age;
 
+    @ApiModelProperty("年龄最大值")
     private int ageTo;
 
     public UserQueryCondition() {
