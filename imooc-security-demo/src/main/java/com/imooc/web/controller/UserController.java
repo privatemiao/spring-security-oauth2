@@ -68,9 +68,9 @@ public class UserController {
     @GetMapping("/{id}")
     @JsonView(User.UserDetailView.class)
     public User getInfo(@PathVariable String id) {
-        if (true){
+        /*if (true){
             throw new RuntimeException("User not exist");
-        }
+        }*/
         User user = new User();
         user.setUsername("tom");
         return user;
