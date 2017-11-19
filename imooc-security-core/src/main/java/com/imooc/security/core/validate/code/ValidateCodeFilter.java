@@ -1,82 +1,124 @@
 package com.imooc.security.core.validate.code;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.social.connect.web.HttpSessionSessionStrategy;
 import org.springframework.social.connect.web.SessionStrategy;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.imooc.security.core.properties.SecurityProperties;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
-public class ValidateCodeFilter extends OncePerRequestFilter {
+public class ValidateCodeFilter extends OncePerRequestFilter implements InitializingBean {
 
-    private AuthenticationFailureHandler authenticationFailureHandler;
+	private AuthenticationFailureHandler authenticationFailureHandler;
 
-    private SessionStrategy sessionStrategy = new HttpSessionSessionStrategy();
+	private SessionStrategy sessionStrategy = new HttpSessionSessionStrategy();
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (StringUtils.equals("/authentication/form", request.getRequestURI())
-                && StringUtils.equalsIgnoreCase(request.getMethod(), "post")) {
-            try {
-                validate(new ServletWebRequest(request));
-            } catch (ValidateCodeException e) {
-                System.err.println(e.getMessage());
-                authenticationFailureHandler.onAuthenticationFailure(request, response, e);
-                return;
-            }
+	private Set<String> urls = new HashSet<>();
 
-        }
+	private SecurityProperties securityProperties;
 
-        filterChain.doFilter(request, response);
-    }
+	private AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    private void validate(ServletWebRequest request) throws ValidateCodeException, ServletRequestBindingException {
-        ImageCode codeInSession = (ImageCode) sessionStrategy.getAttribute(request, ValidateCodeController.SESSION_KEY_IMAGE_CODE);
+	@Override
+	public void afterPropertiesSet() throws ServletException {
+		super.afterPropertiesSet();
+		String[] configUrls = StringUtils
+				.splitByWholeSeparatorPreserveAllTokens(securityProperties.getCode().getImage().getUrl(), ",");
+		for (String config : configUrls) {
+			urls.add(config);
+		}
+		urls.add("/authentication/form");
+	}
 
-        String codeInRequest = ServletRequestUtils.getStringParameter(request.getRequest(), "imageCode");
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        if (StringUtils.isBlank(codeInRequest)) {
-            throw new ValidateCodeException("验证码值不能为空");
-        }
+		boolean action = false;
+		for (String url : urls) {
+			if (pathMatcher.match(url, request.getRequestURI())) {
+				action = true;
+			}
+		}
 
-        if (codeInSession == null) {
-            throw new ValidateCodeException("验证码不存在");
-        }
+		if (action) {
+			try {
+				validate(new ServletWebRequest(request));
+			} catch (ValidateCodeException e) {
+				System.err.println(e.getMessage());
+				authenticationFailureHandler.onAuthenticationFailure(request, response, e);
+				return;
+			}
 
-        if (codeInSession.isExpired()) {
-            sessionStrategy.removeAttribute(request, ValidateCodeController.SESSION_KEY_IMAGE_CODE);
-            throw new ValidateCodeException("验证码已经过期");
-        }
+		}
 
-        if (!StringUtils.equals(codeInSession.getCode(), codeInRequest)) {
-            throw new ValidateCodeException("验证码不匹配");
-        }
+		filterChain.doFilter(request, response);
+	}
 
-        sessionStrategy.removeAttribute(request, ValidateCodeController.SESSION_KEY_IMAGE_CODE);
+	private void validate(ServletWebRequest request) throws ValidateCodeException, ServletRequestBindingException {
+		ImageCode codeInSession = (ImageCode) sessionStrategy.getAttribute(request,
+				ValidateCodeController.SESSION_KEY_IMAGE_CODE);
 
-    }
+		String codeInRequest = ServletRequestUtils.getStringParameter(request.getRequest(), "imageCode");
 
-    public SessionStrategy getSessionStrategy() {
-        return sessionStrategy;
-    }
+		if (StringUtils.isBlank(codeInRequest)) {
+			throw new ValidateCodeException("验证码值不能为空");
+		}
 
-    public void setSessionStrategy(SessionStrategy sessionStrategy) {
-        this.sessionStrategy = sessionStrategy;
-    }
+		if (codeInSession == null) {
+			throw new ValidateCodeException("验证码不存在");
+		}
 
-    public AuthenticationFailureHandler getAuthenticationFailureHandler() {
-        return authenticationFailureHandler;
-    }
+		if (codeInSession.isExpired()) {
+			sessionStrategy.removeAttribute(request, ValidateCodeController.SESSION_KEY_IMAGE_CODE);
+			throw new ValidateCodeException("验证码已经过期");
+		}
 
-    public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
-        this.authenticationFailureHandler = authenticationFailureHandler;
-    }
+		if (!StringUtils.equals(codeInSession.getCode(), codeInRequest)) {
+			throw new ValidateCodeException("验证码不匹配");
+		}
+
+		sessionStrategy.removeAttribute(request, ValidateCodeController.SESSION_KEY_IMAGE_CODE);
+
+	}
+
+	public SessionStrategy getSessionStrategy() {
+		return sessionStrategy;
+	}
+
+	public void setSessionStrategy(SessionStrategy sessionStrategy) {
+		this.sessionStrategy = sessionStrategy;
+	}
+
+	public AuthenticationFailureHandler getAuthenticationFailureHandler() {
+		return authenticationFailureHandler;
+	}
+
+	public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
+		this.authenticationFailureHandler = authenticationFailureHandler;
+	}
+
+	public SecurityProperties getSecurityProperties() {
+		return securityProperties;
+	}
+
+	public void setSecurityProperties(SecurityProperties securityProperties) {
+		this.securityProperties = securityProperties;
+	}
+	
+	
 }

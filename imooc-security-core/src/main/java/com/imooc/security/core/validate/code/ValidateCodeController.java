@@ -11,11 +11,15 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.social.connect.web.HttpSessionSessionStrategy;
 import org.springframework.social.connect.web.SessionStrategy;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
+
+import com.imooc.security.core.properties.SecurityProperties;
 
 @RestController
 public class ValidateCodeController {
@@ -24,16 +28,21 @@ public class ValidateCodeController {
 
 	private SessionStrategy sessionStrategy = new HttpSessionSessionStrategy();
 
+	@Autowired
+	private SecurityProperties securityProperties;
+
 	@GetMapping("/code/image")
 	public void createCode(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		ImageCode imageCode = createImageCode(request);
+		ImageCode imageCode = generate(new ServletWebRequest(request));
 		sessionStrategy.setAttribute(new ServletWebRequest(request), SESSION_KEY_IMAGE_CODE, imageCode);
 		ImageIO.write(imageCode.getImage(), "JPEG", response.getOutputStream());
 	}
 
-	private ImageCode createImageCode(HttpServletRequest request) {
-		int width = 67;
-		int height = 23;
+	private ImageCode generate(ServletWebRequest request) {
+		int width = ServletRequestUtils.getIntParameter(request.getRequest(), "width",
+				securityProperties.getCode().getImage().getLength());
+		int height = ServletRequestUtils.getIntParameter(request.getRequest(), "height",
+				securityProperties.getCode().getImage().getHeight());
 
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
 		Graphics g = image.getGraphics();
@@ -53,7 +62,7 @@ public class ValidateCodeController {
 		}
 
 		String sRand = "";
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < securityProperties.getCode().getImage().getLength(); i++) {
 			String rand = String.valueOf(random.nextInt(10));
 			sRand += rand;
 			g.setColor(new Color(20 + random.nextInt(110), 20 + random.nextInt(110), 20 + random.nextInt(110)));
@@ -62,7 +71,7 @@ public class ValidateCodeController {
 
 		g.dispose();
 
-		return new ImageCode(image, sRand, 60);
+		return new ImageCode(image, sRand, securityProperties.getCode().getImage().getExpireIn());
 	}
 
 	private Color getRandColor(int fc, int bc) {
