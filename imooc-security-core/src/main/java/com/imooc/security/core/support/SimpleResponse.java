@@ -1,4 +1,4 @@
-package com.imooc.security.browser.suport;
+package com.imooc.security.core.support;
 
 public class SimpleResponse {
     private Object content;
