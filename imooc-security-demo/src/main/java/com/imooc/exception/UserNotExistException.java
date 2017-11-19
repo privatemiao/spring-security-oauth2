@@ -2,7 +2,11 @@ package com.imooc.exception;
 
 public class UserNotExistException extends RuntimeException {
 
-    private String id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String id;
 
     public UserNotExistException(String id) {
         super("User not exist");
