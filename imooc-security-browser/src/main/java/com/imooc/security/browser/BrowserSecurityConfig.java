@@ -29,15 +29,23 @@ public class BrowserSecurityConfig extends WebSecurityConfigurerAdapter {
 		validateCodeFilter.setAuthenticationFailureHandler(imoocAuthenticationFailureHandler);
 		validateCodeFilter.setSecurityProperties(securityProperties);
 		validateCodeFilter.afterPropertiesSet();
-
-		http.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class).formLogin()
-				// .loginPage("/imooc-signin.html")
-				.loginPage("/authentication/require").loginProcessingUrl("/authentication/form")
-				.successHandler(imoocAuthenticationSuccessHandler).failureHandler(imoocAuthenticationFailureHandler)
-				.and().authorizeRequests()
-				// .antMatchers("/imooc-signin.html").permitAll()
+//		@formatter:off
+		http
+			.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class)
+			.formLogin()
+				.loginPage("/authentication/require")
+				.loginProcessingUrl("/authentication/form")
+				.successHandler(imoocAuthenticationSuccessHandler)
+				.failureHandler(imoocAuthenticationFailureHandler)
+			.and()
+			.authorizeRequests()
 				.antMatchers("/authentication/require", securityProperties.getBrowser().getLoginPage(), "/code/image")
-				.permitAll().anyRequest().authenticated().and().csrf().disable();
+				.permitAll()
+				.anyRequest()
+				.authenticated()
+			.and()
+			.csrf().disable();
+//		@formatter:on
 	}
 
 }
