@@ -6,9 +6,9 @@ public class OAuth2Properties {
 
 	private OAuth2ClientProperties[] clients = {};
 
+	private String jwtSigninKey = "imooc";
+
 	public OAuth2Properties() {
-		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public OAuth2ClientProperties[] getClients() {
@@ -17,6 +17,14 @@ public class OAuth2Properties {
 
 	public void setClients(OAuth2ClientProperties[] clients) {
 		this.clients = clients;
+	}
+
+	public String getJwtSigninKey() {
+		return jwtSigninKey;
+	}
+
+	public void setJwtSigninKey(String jwtSigninKey) {
+		this.jwtSigninKey = jwtSigninKey;
 	}
 
 	@Override

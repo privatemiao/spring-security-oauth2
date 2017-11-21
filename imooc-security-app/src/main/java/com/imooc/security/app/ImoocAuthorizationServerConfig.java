@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.config.annotation.configurers.ClientD
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import com.imooc.security.core.properties.OAuth2ClientProperties;
 import com.imooc.security.core.properties.SecurityProperties;
@@ -26,10 +27,15 @@ public class ImoocAuthorizationServerConfig extends AuthorizationServerConfigure
 
 	@Autowired
 	private SecurityProperties securityProperties;
+	
+	@Autowired
+	private JwtAccessTokenConverter jwtAccessTokenConverter;
 
 	@Override
 	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
 		endpoints.authenticationManager(authenticationManager).userDetailsService(userDetailsService);
+		
+		endpoints.accessTokenConverter(jwtAccessTokenConverter);
 	}
 
 	@Override
